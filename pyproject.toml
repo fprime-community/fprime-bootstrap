@@ -1,0 +1,80 @@
+[build-system]
+requires = ["setuptools", "setuptools_scm[toml]>=6.2", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fprime-bootstrap"
+dynamic = ["version"]
+description = "F Prime Flight Software bootstrapping tool"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {file = "LICENSE.txt"}
+keywords = ["fprime", "embedded", "nasa", "flight", "software"]
+authors = [
+  {name = "Thomas Boyer-Chammard", email = "Thomas.Boyer.Chammard@jpl.nasa.gov"},
+]
+
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Operating System :: Unix",
+    "Operating System :: POSIX",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+    "License :: OSI Approved :: Apache Software License",
+]
+
+dependencies = [
+    "pytest>=6.2.4",
+    "cookiecutter>=2.2.3",
+    "requests>=2.31.0",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+]
+dev = [
+    "black",
+]
+
+[project.urls]
+Homepage = "https://fprime.jpl.nasa.gov"
+Documentation = "https://nasa.github.io/fprime/"
+Repository = "https://github.com/fprime-community/fprime-bootstrap"
+
+####
+# Entry Points:
+#
+# Defines the list of entry-level (scripts) that are defined by this package. This allows
+# standard use of utilities that ship as part of F prime.
+####
+[project.scripts]
+fprime-bootstrap = "fprime_bootstrap.__main__:main"
+
+####
+# setuptools_scm dynamically generates version number from git, as well as automatically
+# include all data files tracked by git (e.g. cookiecutter templates).
+# See https://setuptools.pypa.io/en/latest/userguide/datafiles.html
+####
+[tool.setuptools_scm]
+
+
+####
+# Additional notes
+#
+# With regards to the configuration of the older versions of setup.py:
+# - package_data: included by default, and setuptools_scm will automatically include all files tracked by git
+# - package discovery (src/): setuptools will automatically discover all packages as we use the src-layout
+#
+# Reference:
+# - https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html
+# - https://setuptools.pypa.io/en/latest/userguide/package_discovery.html#src-layout
+####
