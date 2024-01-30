@@ -37,7 +37,6 @@ def bootstrap_project(parsed_args: "argparse.Namespace"):
             output_dir=parsed_args.path,
             extra_context={
                 "__install_venv": "no" if parsed_args.no_venv else "yes",
-                "__git_init": "yes" if parsed_args.no_git_init else "no",
             },
         )
     except PermissionError as out_directory_error:
