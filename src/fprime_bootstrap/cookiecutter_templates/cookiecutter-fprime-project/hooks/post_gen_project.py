@@ -5,7 +5,7 @@ It does the following:
 - Initializes a git repository
 - Adds F' as a submodule
 - Checks out the latest release of F'
-- Upgrades pip and installs the virtual environment if requested
+- Upgrades pip and creates a virtual environment if requested
 
 @author thomas-bc
 """
@@ -62,24 +62,36 @@ if res.returncode != 0:
 
 # Install venv if requested
 if "{{cookiecutter.__install_venv}}" == "yes":
-    if sys.prefix != sys.base_prefix:
+    try:
+        print(f"[INFO] Creating virtual environment in {Path.cwd()}/fprime-venv ...")
+        subprocess.run([Path(sys.executable), "-m", "venv", "./fprime-venv"])
+
+        # Find pip
+        pip = None
+        if Path("./fprime-venv/bin/pip").exists():
+            pip = Path("./fprime-venv/bin/pip")
+        elif Path("./fprime-venv/bin/pip3").exists():
+            pip = Path("./fprime-venv/bin/pip3")
+        else:
+            raise FileNotFoundError("Could not find pip executable in venv.")
+
         # Upgrade pip
         print("[INFO] Upgrading pip...")
         subprocess.run(
-            [Path(sys.prefix) / "bin" / "pip", "install", "--upgrade", "pip"]
+            [pip, "install", "--upgrade", "pip"]
         )
         # Install requirements.txt
         print("[INFO] Installing F´ dependencies...")
         subprocess.run(
             [
-                Path(sys.prefix) / "bin" / "pip",
+                pip,
                 "install",
                 "-Ur",
                 Path("fprime") / "requirements.txt",
             ]
         )
-    else:
-        # Print warning after the following message so users do not miss it
+    except Exception as e:
+        # Print warning at the end to make sure the user sees it
         PRINT_VENV_WARNING = True
 else:
     print(
@@ -98,10 +110,14 @@ submodule, you can now create your first commit.
 
 Get started with your F´ project:
 
--- Generate a new component --
+-- Remember to always activate the virtual environment --
+cd {{ cookiecutter.project_name }}
+. fprime-venv/bin/activate
+
+-- Create a new component --
 fprime-util new --component
 
--- Generate a new deployment --
+-- Create a new deployment --
 fprime-util new --deployment
 
 ################################################################
@@ -110,6 +126,6 @@ fprime-util new --deployment
 
 if PRINT_VENV_WARNING:
     print(
-        "[WARNING] requirements.txt has not been installed because you are not running in a virtual environment.",
-        "Install with `pip install -Ur fprime/requirements.txt`",
+        f"[WARNING] An error occurred while creating the virtual environment. "
+        f"Please install the virtual environment manually. Error:\n{e}"
     )
