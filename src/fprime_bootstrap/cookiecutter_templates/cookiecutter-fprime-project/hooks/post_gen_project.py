@@ -9,6 +9,7 @@ It does the following:
 
 @author thomas-bc
 """
+
 import subprocess
 import sys
 import requests
@@ -77,9 +78,7 @@ if "{{cookiecutter.__install_venv}}" == "yes":
 
         # Upgrade pip
         print("[INFO] Upgrading pip...")
-        subprocess.run(
-            [pip, "install", "--upgrade", "pip"]
-        )
+        subprocess.run([pip, "install", "--upgrade", "pip"])
         # Install requirements.txt
         print("[INFO] Installing F´ dependencies...")
         subprocess.run(
