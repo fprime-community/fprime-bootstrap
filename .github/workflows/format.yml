@@ -1,0 +1,23 @@
+name: Format Python
+
+
+on:
+  push:
+    branches: [ devel ]
+  pull_request:
+    branches: [ devel ]
+
+jobs:
+  format:
+      name: Format
+      runs-on: ubuntu-latest
+      steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+      - name: Check formatting
+        run: |
+          pip install black==21.6b0
+          black --check --diff ./
