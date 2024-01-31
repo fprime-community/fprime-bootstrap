@@ -20,7 +20,7 @@ def main():
 
     parser = argparse.ArgumentParser(description="F Prime bootstrapping tool")
     subparsers = parser.add_subparsers(title="subcommands", dest="command")
-    project_parser = subparsers.add_parser('project', help='Create a new F´ project')
+    project_parser = subparsers.add_parser("project", help="Create a new F´ project")
     project_parser.add_argument(
         "--path",
         type=str,
@@ -38,14 +38,12 @@ def main():
 
     if args.command == "project":
         from fprime_bootstrap import bootstrap_project
-        return bootstrap_project.bootstrap_project(args)
 
+        return bootstrap_project.bootstrap_project(args)
 
     LOGGER.error("[ERROR] No sub-command supplied")
     parser.print_help()
     sys.exit(1)
-
-
 
 
 if __name__ == "__main__":
