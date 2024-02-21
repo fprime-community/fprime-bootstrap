@@ -24,6 +24,7 @@ DEFAULT_PROJECT_NAME = "MyProject"
 
 LOGGER = logging.getLogger("fprime_bootstrap")
 
+
 def bootstrap_project(parsed_args: "argparse.Namespace"):
     """Creates a new F' project"""
 
@@ -102,9 +103,7 @@ def is_valid_name(project_name: str) -> bool:
     for char in project_name:
         if char in invalid_characters:
             LOGGER.error("Invalid character in project name: {}".format(char))
-            LOGGER.error(
-                "Invalid project name. "
-            )
+            LOGGER.error("Invalid project name. ")
             return False
     return True
 
