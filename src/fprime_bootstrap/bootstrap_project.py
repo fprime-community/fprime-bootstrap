@@ -8,6 +8,7 @@ Bootstraps a new project using cookiecuter
 
 import json
 import shutil
+import logging
 import subprocess
 import sys
 from urllib.request import urlopen
@@ -21,19 +22,23 @@ if TYPE_CHECKING:
 
 DEFAULT_PROJECT_NAME = "MyProject"
 
+LOGGER = logging.getLogger("fprime_bootstrap")
 
 def bootstrap_project(parsed_args: "argparse.Namespace"):
     """Creates a new F' project"""
 
     # Check Python version
     if sys.version_info < (3, 8):
-        print("[WARNING] Python 3.8 or higher is required to use the F´ Python tooling suite.")
+        LOGGER.error(
+            "Python 3.8 or higher is required to use the F´ Python tooling suite. "
+            "Please install Python 3.8 or higher and try again."
+        )
+        return 1
 
     # Check if Git is installed and available - needed for cloning F' as submodule
     if not shutil.which("git"):
-        print(
-            "[ERROR] Git is not installed or in PATH. Please install Git and try again.",
-            file=sys.stderr,
+        LOGGER.error(
+            "Git is not installed or in PATH. Please install Git and try again.",
         )
         return 1
 
@@ -41,7 +46,7 @@ def bootstrap_project(parsed_args: "argparse.Namespace"):
     # Ask user for project name
     project_name = input(f"Project name ({DEFAULT_PROJECT_NAME}): ")
     if not is_valid_name(project_name):
-        sys.exit(1)
+        return 1
     elif not project_name:
         project_name = DEFAULT_PROJECT_NAME
 
@@ -56,15 +61,13 @@ def bootstrap_project(parsed_args: "argparse.Namespace"):
         print_success_message(project_name)
 
     except PermissionError as out_directory_error:
-        print(
-            f"{out_directory_error}. Use --overwrite to overwrite (will not delete non-generated files).",
-            file=sys.stderr,
+        LOGGER.error(
+            f"{out_directory_error}. Use --overwrite to overwrite (will not delete non-generated files)."
         )
         return 1
     except FileNotFoundError as e:
-        print(
+        LOGGER.error(
             f"{e}. Permission denied to write to the directory.",
-            file=sys.stderr,
         )
         return 1
     return 0
@@ -98,9 +101,9 @@ def is_valid_name(project_name: str) -> bool:
     ]
     for char in project_name:
         if char in invalid_characters:
-            print("[ERROR] Invalid character in project name: {}".format(char))
-            print(
-                "[ERROR] Invalid project name. Do not use spaces or special characters"
+            LOGGER.error("Invalid character in project name: {}".format(char))
+            LOGGER.error(
+                "Invalid project name. "
             )
             return False
     return True
@@ -117,7 +120,7 @@ def setup_git_repo(project_path: Path):
     subprocess.run(["git", "init"], cwd=project_path)
 
     # Add F' as a submodule
-    print(f"[INFO] Checking out F' submodule at latest release: {latest_tag_name}")
+    LOGGER.info(f"Checking out F´ submodule at latest release: {latest_tag_name}")
     subprocess.run(
         [
             "git",
@@ -136,7 +139,7 @@ def setup_git_repo(project_path: Path):
         cwd=project_path,
     )
     if res.returncode != 0:
-        print(
+        LOGGER.warning(
             "[WARNING] Unable to initialize submodules. Functionality may be limited."
         )
 
@@ -155,7 +158,7 @@ def setup_git_repo(project_path: Path):
         capture_output=True,
     )
     if res.returncode != 0:
-        print(f"[ERROR] Unable to checkout tag: {latest_tag_name}. Exit...")
+        LOGGER.error(f"Unable to checkout tag: {latest_tag_name}. Exit...")
         sys.exit(1)
 
 
@@ -163,7 +166,7 @@ def setup_venv(project_path: Path):
     """Sets up a new virtual environment"""
     venv_path = project_path / "fprime-venv"
 
-    print(f"[INFO] Creating virtual environment in {venv_path} ...")
+    LOGGER.info(f"Creating virtual environment in {venv_path} ...")
     subprocess.run([Path(sys.executable), "-m", "venv", venv_path])
 
     # Find pip
@@ -175,11 +178,10 @@ def setup_venv(project_path: Path):
     else:
         raise FileNotFoundError("Could not find pip executable in venv.")
 
-    # Upgrade pip
-    print("[INFO] Upgrading pip...")
+    LOGGER.info("Upgrading pip...")
     subprocess.run([pip, "install", "--upgrade", "pip"])
-    # Install requirements.txt
-    print("[INFO] Installing F´ dependencies...")
+
+    LOGGER.info("Installing F´ dependencies...")
     subprocess.run(
         [
             pip,
@@ -196,7 +198,7 @@ def generate_boilerplate_project(project_path: Path, project_name: str):
     # copy files from template into target path
     shutil.copytree(source, project_path)
 
-    # Iterate over all files in path and replace {{FPRIME_PROJECT_NAME}} with project_name
+    # Iterate over all files in path and replace {{FPRIME_PROJECT_NAME}} placeholder with project_name
     for file in project_path.rglob("*"):
         if file.is_file():
             with file.open("r") as f:
