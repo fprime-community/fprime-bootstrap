@@ -7,7 +7,7 @@ name = "fprime-bootstrap"
 dynamic = ["version"]
 description = "F Prime Flight Software bootstrapping tool"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.6"
 license = {file = "LICENSE.txt"}
 keywords = ["fprime", "embedded", "nasa", "flight", "software"]
 authors = [
@@ -31,10 +31,7 @@ classifiers = [
     "License :: OSI Approved :: Apache Software License",
 ]
 
-dependencies = [
-    "cookiecutter>=2.2.3",
-    "requests>=2.31.0",
-]
+dependencies = []
 
 [project.optional-dependencies]
 test = [
