@@ -198,8 +198,8 @@ def generate_boilerplate_project(project_path: Path, project_name: str):
     shutil.copytree(source, project_path)
 
     # Iterate over all template files and replace {{FPRIME_PROJECT_NAME}} placeholder with project_name
-    for file in project_path.rglob("*"):
-        if file.is_file() and file.name.endswith("-template"):
+    for file in project_path.rglob("*-template"):
+        if file.is_file():
             with file.open("r") as f:
                 contents = f.read()
             with file.open("w") as f:
