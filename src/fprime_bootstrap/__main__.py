@@ -13,7 +13,7 @@ import logging
 import argparse
 
 logging.basicConfig(
-    format='[%(levelname)s] %(message)s',
+    format="[%(levelname)s] %(message)s",
     level=logging.INFO,
 )
 LOGGER = logging.getLogger("fprime_bootstrap")
