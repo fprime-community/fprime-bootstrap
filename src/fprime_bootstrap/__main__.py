@@ -12,6 +12,10 @@ import os
 import logging
 import argparse
 
+logging.basicConfig(
+    format="[%(levelname)s] %(message)s",
+    level=logging.INFO,
+)
 LOGGER = logging.getLogger("fprime_bootstrap")
 
 
@@ -41,7 +45,7 @@ def main():
 
         return bootstrap_project.bootstrap_project(args)
 
-    LOGGER.error("[ERROR] No sub-command supplied")
+    LOGGER.error("No sub-command supplied")
     parser.print_help()
     sys.exit(1)
 
