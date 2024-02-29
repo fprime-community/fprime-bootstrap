@@ -61,9 +61,9 @@ def bootstrap_project(parsed_args: "argparse.Namespace"):
 
         print_success_message(project_name)
 
-    except PermissionError as out_directory_error:
+    except (PermissionError, FileExistsError) as out_directory_error:
         LOGGER.error(
-            f"{out_directory_error}. Use --overwrite to overwrite (will not delete non-generated files)."
+            f"{out_directory_error}. Please select a different project name or remove the existing directory."
         )
         return 1
     except FileNotFoundError as e:
@@ -197,13 +197,15 @@ def generate_boilerplate_project(project_path: Path, project_name: str):
     # copy files from template into target path
     shutil.copytree(source, project_path)
 
-    # Iterate over all files in path and replace {{FPRIME_PROJECT_NAME}} placeholder with project_name
+    # Iterate over all template files and replace {{FPRIME_PROJECT_NAME}} placeholder with project_name
     for file in project_path.rglob("*"):
-        if file.is_file():
+        if file.is_file() and file.name.endswith("-template"):
             with file.open("r") as f:
                 contents = f.read()
             with file.open("w") as f:
                 f.write(contents.replace(r"{{FPRIME_PROJECT_NAME}}", project_name))
+            # Rename file by removing the -template suffix
+            file.rename(file.parent / file.name.replace("-template", ""))
 
 
 def print_success_message(project_name: str):
