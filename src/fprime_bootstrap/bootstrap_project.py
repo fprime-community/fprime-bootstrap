@@ -137,7 +137,7 @@ def setup_git_repo(project_path: Path):
         with urlopen("https://api.github.com/repos/nasa/fprime/releases/latest") as url:
             fprime_latest_release = json.loads(url.read().decode())
             latest_tag_name = fprime_latest_release["tag_name"]
-    except HTTPError as e:
+    except HTTPError:
         LOGGER.warning("Unable to retrieve latest F´ release through the GitHub API.")
         if os.getenv("FPRIME_RELEASE_TAG"):
             LOGGER.info(f"Using F´ release tag from FPRIME_RELEASE_TAG environment variable: {os.getenv('FPRIME_RELEASE_TAG')}")
@@ -145,6 +145,7 @@ def setup_git_repo(project_path: Path):
         else:
             tags = subprocess.Popen(["git", "ls-remote", "--tags", "--refs", "https://github.com/nasa/fprime"], stdout=subprocess.PIPE).stdout.readlines()
             latest_tag_name = tags[-1].decode().split("\t")[1].split("/")[-1].strip()
+            LOGGER.warning(f"Attempting to read latest tag with `git ls-remote`. Found tag: {latest_tag_name}.")
 
     # Initialize git repository
     subprocess.run(["git", "init"], cwd=project_path)
