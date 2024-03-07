@@ -130,6 +130,9 @@ def run_context_checks(project_path: Path):
             f"Special characters such as single or double quotes and spaces are not allowed in the project path: {real_path}."
         )
 
+    # TODO:
+    # 1) Ideally we would check that the path is not a symlink here, but it doesn't seem to be doable in Python... ?
+    # 2) Elegant way of dealing with line endings in Windows (see https://github.com/nasa/fprime/issues/2566)
     return 0
 
 
@@ -237,34 +240,6 @@ def generate_boilerplate_project(project_path: Path, project_name: str):
             file.rename(file.parent / file.name.replace("-template", ""))
 
 
-def print_success_message(project_name: str):
-    """Prints a success message"""
-    print(
-        f"""
-################################################################
-
-Congratulations! You have successfully created a new F´ project.
-
-A git repository has been initialized and F´ has been added as a
-submodule, you can now create your first commit.
-
-Get started with your F´ project:
-
--- Remember to always activate the virtual environment --
-cd {project_name}
-. fprime-venv/bin/activate
-
--- Create a new component --
-fprime-util new --component
-
--- Create a new deployment --
-fprime-util new --deployment
-
-################################################################
-"""
-    )
-
-
 def get_latest_fprime_release() -> str:
     """Retrieves the latest F´ release from GitHub
 
@@ -302,6 +277,34 @@ def get_latest_fprime_release() -> str:
             return tuple(map(int, version.lstrip("v").split(".")))
 
         return max(tags, key=version_tuple)
+
+
+def print_success_message(project_name: str):
+    """Prints a success message"""
+    print(
+        f"""
+################################################################
+
+Congratulations! You have successfully created a new F´ project.
+
+A git repository has been initialized and F´ has been added as a
+submodule, you can now create your first commit.
+
+Get started with your F´ project:
+
+-- Remember to always activate the virtual environment --
+cd {project_name}
+. fprime-venv/bin/activate
+
+-- Create a new component --
+fprime-util new --component
+
+-- Create a new deployment --
+fprime-util new --deployment
+
+################################################################
+"""
+    )
 
 
 #################### Exceptions ####################
