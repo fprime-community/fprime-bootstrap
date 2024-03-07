@@ -28,28 +28,16 @@ LOGGER = logging.getLogger("fprime_bootstrap")
 def bootstrap_project(parsed_args: "argparse.Namespace"):
     """Creates a new F' project"""
 
-    # Check Python version
-    if sys.version_info < (3, 8):
-        LOGGER.error(
-            "Python 3.8 or higher is required to use the F´ Python tooling suite. "
-            "Please install Python 3.8 or higher and try again."
-        )
-        return 1
+    # Runs system checks such as Python version, OS requirements etc...
+    run_system_checks()
+    # Run contextual checks, such as parent path and project name
+    run_context_checks(parsed_args.path)
 
-    # Check if Git is installed and available - needed for cloning F' as submodule
-    if not shutil.which("git"):
-        LOGGER.error(
-            "Git is not installed or in PATH. Please install Git and try again.",
-        )
-        return 1
 
     target_dir = Path(parsed_args.path)
     # Ask user for project name
-    project_name = input(f"Project name ({DEFAULT_PROJECT_NAME}): ")
-    if not is_valid_name(project_name):
-        return 1
-    elif not project_name:
-        project_name = DEFAULT_PROJECT_NAME
+    project_name = input(f"Project name ({DEFAULT_PROJECT_NAME}): ") or DEFAULT_PROJECT_NAME
+    check_project_name(project_name)
 
     project_path = target_dir / project_name
 
@@ -62,19 +50,17 @@ def bootstrap_project(parsed_args: "argparse.Namespace"):
         print_success_message(project_name)
 
     except (PermissionError, FileExistsError) as out_directory_error:
-        LOGGER.error(
+        raise OutDirectoryError(
             f"{out_directory_error}. Please select a different project name or remove the existing directory."
         )
-        return 1
     except FileNotFoundError as e:
-        LOGGER.error(
+        raise OutDirectoryError(
             f"{e}. Permission denied to write to the directory.",
         )
-        return 1
     return 0
 
 
-def is_valid_name(project_name: str) -> bool:
+def check_project_name(project_name: str) -> bool:
     """Checks if a project name is valid"""
     invalid_characters = [
         "#",
@@ -102,11 +88,44 @@ def is_valid_name(project_name: str) -> bool:
     ]
     for char in project_name:
         if char in invalid_characters:
-            LOGGER.error("Invalid character in project name: {}".format(char))
-            LOGGER.error("Invalid project name. ")
-            return False
-    return True
+            raise InvalidProjectName(
+                f"Invalid character in project name: {char}. "
+                "Project name cannot contain special characters or spaces."
+            )
 
+def run_system_checks():
+    """Runs system checks"""
+    # Check Python version
+    if sys.version_info < (3, 8):
+        raise UnsupportedPythonVersion(
+            "Python 3.8 or higher is required to use the F´ Python tooling suite. "
+            "Please install Python 3.8 or higher and try again."
+        )
+
+    # Check if Git is installed and available - needed for cloning F' as submodule
+    if not shutil.which("git"):
+        raise GitNotInstalled(
+            "Git is not installed or in PATH. Please install Git and try again."
+        )
+
+    # Check if running on Windows
+    if sys.platform == "win32":
+        raise UnsupportedPlatform(
+            "F´ does not currently support Windows. Please use WSL (https://learn.microsoft.com/en-us/windows/wsl/about), "
+            "or a Linux or macOS system. If you are using WSL, please ensure you are running this script from WSL."
+        )
+    return 0
+
+def run_context_checks(project_path: Path):
+    path = Path(project_path).resolve()
+    print(path)
+    # Check if path has symlink in parent directories
+    # while path != path.parent:
+    #     if path.is_symlink():
+    #         return 1
+    #     path = path.parent
+
+    return 0
 
 def setup_git_repo(project_path: Path):
     """Sets up a new git project"""
@@ -234,3 +253,25 @@ fprime-util new --deployment
 ################################################################
 """
     )
+
+
+
+class BootstrapProjectError(Exception):
+    """Base exception class for bootstrap project errors"""
+    pass
+
+class UnsupportedPythonVersion(BootstrapProjectError):
+    pass
+
+class GitNotInstalled(BootstrapProjectError):
+    pass
+
+class UnsupportedPlatform(BootstrapProjectError):
+    pass
+
+class InvalidProjectName(BootstrapProjectError):
+    pass
+
+class OutDirectoryError(BootstrapProjectError):
+    pass
+
