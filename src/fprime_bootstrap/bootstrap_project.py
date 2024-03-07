@@ -11,7 +11,9 @@ import shutil
 import logging
 import subprocess
 import sys
+import os
 from urllib.request import urlopen
+from urllib.error import HTTPError
 from pathlib import Path
 
 from typing import TYPE_CHECKING
@@ -117,22 +119,32 @@ def run_system_checks():
     return 0
 
 def run_context_checks(project_path: Path):
-    path = Path(project_path).resolve()
-    print(path)
-    # Check if path has symlink in parent directories
-    # while path != path.parent:
-    #     if path.is_symlink():
-    #         return 1
-    #     path = path.parent
+    real_path = Path(project_path).resolve()
 
+    # Check that no ' " and spaces are in the path and its parents
+    if any(char in str(real_path.name) for char in ['"', "'", "´", " "]):
+        raise InvalidProjectName(
+            f"Special characters such as ' \" and spaces are not allowed in the project path: {real_path}."
+        )
+
+    # TODO: Check provided path has symlink in parent directories
     return 0
 
 def setup_git_repo(project_path: Path):
     """Sets up a new git project"""
     # Retrieve latest F' release
-    with urlopen("https://api.github.com/repos/nasa/fprime/releases/latest") as url:
-        fprime_latest_release = json.loads(url.read().decode())
-        latest_tag_name = fprime_latest_release["tag_name"]
+    try:
+        with urlopen("https://api.github.com/repos/nasa/fprime/releases/latest") as url:
+            fprime_latest_release = json.loads(url.read().decode())
+            latest_tag_name = fprime_latest_release["tag_name"]
+    except HTTPError as e:
+        LOGGER.warning("Unable to retrieve latest F´ release through the GitHub API.")
+        if os.getenv("FPRIME_RELEASE_TAG"):
+            LOGGER.info(f"Using F´ release tag from FPRIME_RELEASE_TAG environment variable: {os.getenv('FPRIME_RELEASE_TAG')}")
+            latest_tag_name = os.getenv("FPRIME_RELEASE_TAG")
+        else:
+            tags = subprocess.Popen(["git", "ls-remote", "--tags", "--refs", "https://github.com/nasa/fprime"], stdout=subprocess.PIPE).stdout.readlines()
+            latest_tag_name = tags[-1].decode().split("\t")[1].split("/")[-1].strip()
 
     # Initialize git repository
     subprocess.run(["git", "init"], cwd=project_path)
@@ -176,7 +188,8 @@ def setup_git_repo(project_path: Path):
         capture_output=True,
     )
     if res.returncode != 0:
-        LOGGER.error(f"Unable to checkout tag: {latest_tag_name}. Exit...")
+        LOGGER.error(f"Unable to checkout tag: {latest_tag_name}.")
+        LOGGER.error("Please set the FPRIME_RELEASE_TAG environment variable to a valid F´ release tag and try again.")
         sys.exit(1)
 
 
