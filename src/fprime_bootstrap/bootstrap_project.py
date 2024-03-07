@@ -127,7 +127,7 @@ def run_context_checks(project_path: Path):
     # Check that no ' " and spaces are in the path and its parents
     if any(char in str(real_path.name) for char in ['"', "'", "´", " "]):
         raise InvalidProjectName(
-            f"Special characters such as ' \" and spaces are not allowed in the project path: {real_path}."
+            f"Special characters such as single or double quotes and spaces are not allowed in the project path: {real_path}."
         )
 
     return 0
