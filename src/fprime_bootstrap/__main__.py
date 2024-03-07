@@ -12,7 +12,7 @@ import os
 import logging
 import argparse
 
-from fprime_bootstrap import BootstrapProjectError
+from fprime_bootstrap.bootstrap_project import BootstrapProjectError
 
 logging.basicConfig(
     format="[%(levelname)s] %(message)s",
