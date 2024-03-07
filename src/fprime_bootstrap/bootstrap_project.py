@@ -28,24 +28,25 @@ LOGGER = logging.getLogger("fprime_bootstrap")
 
 
 def bootstrap_project(parsed_args: "argparse.Namespace"):
-    """Creates a new F' project"""
+    """Creates a new F´ project"""
 
     # Runs system checks such as Python version, OS requirements etc...
     run_system_checks()
     # Run contextual checks, such as parent path and project name
     run_context_checks(parsed_args.path)
 
-
     target_dir = Path(parsed_args.path)
     # Ask user for project name
-    project_name = input(f"Project name ({DEFAULT_PROJECT_NAME}): ") or DEFAULT_PROJECT_NAME
+    project_name = (
+        input(f"Project name ({DEFAULT_PROJECT_NAME}): ") or DEFAULT_PROJECT_NAME
+    )
     check_project_name(project_name)
 
     project_path = target_dir / project_name
 
     try:
         generate_boilerplate_project(project_path, project_name)
-        setup_git_repo(project_path)
+        setup_git_repo(project_path, parsed_args.tag)
         if not parsed_args.no_venv:
             setup_venv(project_path)
 
@@ -95,6 +96,7 @@ def check_project_name(project_name: str) -> bool:
                 "Project name cannot contain special characters or spaces."
             )
 
+
 def run_system_checks():
     """Runs system checks"""
     # Check Python version
@@ -104,7 +106,7 @@ def run_system_checks():
             "Please install Python 3.8 or higher and try again."
         )
 
-    # Check if Git is installed and available - needed for cloning F' as submodule
+    # Check if Git is installed and available - needed for cloning F´ as submodule
     if not shutil.which("git"):
         raise GitNotInstalled(
             "Git is not installed or in PATH. Please install Git and try again."
@@ -118,6 +120,7 @@ def run_system_checks():
         )
     return 0
 
+
 def run_context_checks(project_path: Path):
     real_path = Path(project_path).resolve()
 
@@ -127,31 +130,22 @@ def run_context_checks(project_path: Path):
             f"Special characters such as ' \" and spaces are not allowed in the project path: {real_path}."
         )
 
-    # TODO: Check provided path has symlink in parent directories
     return 0
 
-def setup_git_repo(project_path: Path):
-    """Sets up a new git project"""
-    # Retrieve latest F' release
-    try:
-        with urlopen("https://api.github.com/repos/nasa/fprime/releases/latest") as url:
-            fprime_latest_release = json.loads(url.read().decode())
-            latest_tag_name = fprime_latest_release["tag_name"]
-    except HTTPError:
-        LOGGER.warning("Unable to retrieve latest F´ release through the GitHub API.")
-        if os.getenv("FPRIME_RELEASE_TAG"):
-            LOGGER.info(f"Using F´ release tag from FPRIME_RELEASE_TAG environment variable: {os.getenv('FPRIME_RELEASE_TAG')}")
-            latest_tag_name = os.getenv("FPRIME_RELEASE_TAG")
-        else:
-            tags = subprocess.Popen(["git", "ls-remote", "--tags", "--refs", "https://github.com/nasa/fprime"], stdout=subprocess.PIPE).stdout.readlines()
-            latest_tag_name = tags[-1].decode().split("\t")[1].split("/")[-1].strip()
-            LOGGER.warning(f"Attempting to read latest tag with `git ls-remote`. Found tag: {latest_tag_name}.")
 
+def setup_git_repo(project_path: Path, tag: str):
+    """Sets up a new git project"""
     # Initialize git repository
     subprocess.run(["git", "init"], cwd=project_path)
 
-    # Add F' as a submodule
-    LOGGER.info(f"Checking out F´ submodule at latest release: {latest_tag_name}")
+    # Retrieve latest F´ release
+    if tag:
+        tag_name = tag
+    else:
+        tag_name = get_latest_fprime_release()
+
+    # Add F´ as a submodule
+    LOGGER.info(f"Checking out F´ submodule at version: {tag_name}")
     subprocess.run(
         [
             "git",
@@ -177,20 +171,22 @@ def setup_git_repo(project_path: Path):
     fprime_path = project_path / "fprime"
 
     subprocess.run(
-        ["git", "fetch", "origin", "--depth", "1", "tag", latest_tag_name],
+        ["git", "fetch", "origin", "--depth", "1", "tag", tag_name],
         cwd=fprime_path,
         capture_output=True,
     )
 
     # Checkout requested branch/tag
     res = subprocess.run(
-        ["git", "checkout", latest_tag_name],
+        ["git", "checkout", tag_name],
         cwd=fprime_path,
         capture_output=True,
     )
     if res.returncode != 0:
-        LOGGER.error(f"Unable to checkout tag: {latest_tag_name}.")
-        LOGGER.error("Please set the FPRIME_RELEASE_TAG environment variable to a valid F´ release tag and try again.")
+        LOGGER.error(f"Unable to checkout tag: {tag_name}.")
+        LOGGER.error(
+            "Please set the --tag environment variable to a valid F´ release tag and try again."
+        )
         sys.exit(1)
 
 
@@ -269,23 +265,67 @@ fprime-util new --deployment
     )
 
 
+def get_latest_fprime_release() -> str:
+    """Retrieves the latest F´ release from GitHub
+
+    Note: Using the GitHub API is the simplest and most reliable way to get the
+    latest release. However, in some cases the API may not be respond (e.g. rate
+    limit exceeded). In these cases, we fall back to using `git ls-remote` to get
+    the latest tag. This approach seems fragile (will the format of the output change?),
+    but it's the best we can do without the API.
+    """
+    try:
+        with urlopen(
+            "https://api.github.com/repos/nasa/fprime/releases/latestee"
+        ) as url:
+            fprime_latest_release = json.loads(url.read().decode())
+            return fprime_latest_release["tag_name"]
+    except HTTPError:
+        stdout = subprocess.Popen(
+            [
+                "git",
+                "ls-remote",
+                "--tags",
+                "--refs",
+                "https://github.com/nasa/fprime",
+            ],
+            stdout=subprocess.PIPE,
+        ).stdout.readlines()
+
+        import re
+
+        # This regex only matches tags in the format v1.2.3, and NOT v1.2.3-rc1 or v1.2.3a1 etc...
+        tags = re.findall(r"v\d+\.\d+\.\d+\b", "".join(map(str, stdout)))
+
+        # Used to compare semantic versions, e.g. v3.11.0 > v3.7.0
+        def version_tuple(version):
+            return tuple(map(int, version.lstrip("v").split(".")))
+
+        return max(tags, key=version_tuple)
+
+
+#################### Exceptions ####################
+
 
 class BootstrapProjectError(Exception):
-    """Base exception class for bootstrap project errors"""
     pass
+
 
 class UnsupportedPythonVersion(BootstrapProjectError):
     pass
 
+
 class GitNotInstalled(BootstrapProjectError):
     pass
+
 
 class UnsupportedPlatform(BootstrapProjectError):
     pass
 
+
 class InvalidProjectName(BootstrapProjectError):
     pass
 
+
 class OutDirectoryError(BootstrapProjectError):
     pass
-

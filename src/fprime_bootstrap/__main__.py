@@ -39,6 +39,11 @@ def main():
         help="Do not create a virtual environment in the project",
         default=False,
     )
+    project_parser.add_argument(
+        "--tag",
+        type=str,
+        help="Version of F´ to checkout (default: latest release)",
+    )
 
     args = parser.parse_args()
 
