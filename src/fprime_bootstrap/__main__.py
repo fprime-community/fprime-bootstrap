@@ -12,7 +12,7 @@ import os
 import logging
 import argparse
 
-from fprime_bootstrap.bootstrap_project import BootstrapProjectError
+from fprime_bootstrap.bootstrap_project import bootstrap_project, BootstrapProjectError
 
 logging.basicConfig(
     format="[%(levelname)s] %(message)s",
@@ -49,9 +49,7 @@ def main():
 
     try:
         if args.command == "project":
-            from fprime_bootstrap import bootstrap_project
-
-            return bootstrap_project.bootstrap_project(args)
+            return bootstrap_project(args)
 
     except BootstrapProjectError as e:
         LOGGER.error(e)

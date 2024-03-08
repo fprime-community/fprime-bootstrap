@@ -11,7 +11,6 @@ import shutil
 import logging
 import subprocess
 import sys
-import os
 from urllib.request import urlopen
 from urllib.error import HTTPError
 from pathlib import Path
