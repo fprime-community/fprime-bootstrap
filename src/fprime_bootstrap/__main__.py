@@ -12,6 +12,8 @@ import os
 import logging
 import argparse
 
+from fprime_bootstrap.bootstrap_project import bootstrap_project, BootstrapProjectError
+
 logging.basicConfig(
     format="[%(levelname)s] %(message)s",
     level=logging.INFO,
@@ -37,13 +39,21 @@ def main():
         help="Do not create a virtual environment in the project",
         default=False,
     )
+    project_parser.add_argument(
+        "--tag",
+        type=str,
+        help="Version of F´ to checkout (default: latest release)",
+    )
 
     args = parser.parse_args()
 
-    if args.command == "project":
-        from fprime_bootstrap import bootstrap_project
+    try:
+        if args.command == "project":
+            return bootstrap_project(args)
 
-        return bootstrap_project.bootstrap_project(args)
+    except BootstrapProjectError as e:
+        LOGGER.error(e)
+        return 1
 
     LOGGER.error("No sub-command supplied")
     parser.print_help()

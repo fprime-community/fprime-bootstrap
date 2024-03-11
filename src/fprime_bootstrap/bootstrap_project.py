@@ -12,6 +12,7 @@ import logging
 import subprocess
 import sys
 from urllib.request import urlopen
+from urllib.error import HTTPError
 from pathlib import Path
 
 from typing import TYPE_CHECKING
@@ -26,55 +27,42 @@ LOGGER = logging.getLogger("fprime_bootstrap")
 
 
 def bootstrap_project(parsed_args: "argparse.Namespace"):
-    """Creates a new F' project"""
+    """Creates a new F´ project"""
 
-    # Check Python version
-    if sys.version_info < (3, 8):
-        LOGGER.error(
-            "Python 3.8 or higher is required to use the F´ Python tooling suite. "
-            "Please install Python 3.8 or higher and try again."
-        )
-        return 1
-
-    # Check if Git is installed and available - needed for cloning F' as submodule
-    if not shutil.which("git"):
-        LOGGER.error(
-            "Git is not installed or in PATH. Please install Git and try again.",
-        )
-        return 1
+    # Runs system checks such as Python version, OS requirements etc...
+    run_system_checks()
+    # Run contextual checks, such as parent path and project name
+    run_context_checks(parsed_args.path)
 
     target_dir = Path(parsed_args.path)
     # Ask user for project name
-    project_name = input(f"Project name ({DEFAULT_PROJECT_NAME}): ")
-    if not is_valid_name(project_name):
-        return 1
-    elif not project_name:
-        project_name = DEFAULT_PROJECT_NAME
+    project_name = (
+        input(f"Project name ({DEFAULT_PROJECT_NAME}): ") or DEFAULT_PROJECT_NAME
+    )
+    check_project_name(project_name)
 
     project_path = target_dir / project_name
 
     try:
         generate_boilerplate_project(project_path, project_name)
-        setup_git_repo(project_path)
+        setup_git_repo(project_path, parsed_args.tag)
         if not parsed_args.no_venv:
             setup_venv(project_path)
 
         print_success_message(project_name)
 
     except (PermissionError, FileExistsError) as out_directory_error:
-        LOGGER.error(
+        raise OutDirectoryError(
             f"{out_directory_error}. Please select a different project name or remove the existing directory."
         )
-        return 1
     except FileNotFoundError as e:
-        LOGGER.error(
+        raise OutDirectoryError(
             f"{e}. Permission denied to write to the directory.",
         )
-        return 1
     return 0
 
 
-def is_valid_name(project_name: str) -> bool:
+def check_project_name(project_name: str) -> bool:
     """Checks if a project name is valid"""
     invalid_characters = [
         "#",
@@ -102,24 +90,64 @@ def is_valid_name(project_name: str) -> bool:
     ]
     for char in project_name:
         if char in invalid_characters:
-            LOGGER.error("Invalid character in project name: {}".format(char))
-            LOGGER.error("Invalid project name. ")
-            return False
-    return True
+            raise InvalidProjectName(
+                f"Invalid character in project name: {char}. "
+                "Project name cannot contain special characters or spaces."
+            )
 
 
-def setup_git_repo(project_path: Path):
+def run_system_checks():
+    """Runs system checks"""
+    # Check Python version
+    if sys.version_info < (3, 8):
+        raise UnsupportedPythonVersion(
+            "Python 3.8 or higher is required to use the F´ Python tooling suite. "
+            "Please install Python 3.8 or higher and try again."
+        )
+
+    # Check if Git is installed and available - needed for cloning F´ as submodule
+    if not shutil.which("git"):
+        raise GitNotInstalled(
+            "Git is not installed or in PATH. Please install Git and try again."
+        )
+
+    # Check if running on Windows
+    if sys.platform == "win32":
+        raise UnsupportedPlatform(
+            "F´ does not currently support Windows. Please use WSL (https://learn.microsoft.com/en-us/windows/wsl/about), "
+            "or a Linux or macOS system. If you are using WSL, please ensure you are running this script from WSL."
+        )
+    return 0
+
+
+def run_context_checks(project_path: Path):
+    real_path = Path(project_path).resolve()
+
+    # Check that no ' " and spaces are in the path and its parents
+    if any(char in str(real_path.name) for char in ['"', "'", "´", " "]):
+        raise InvalidProjectName(
+            f"Special characters such as single or double quotes and spaces are not allowed in the project path: {real_path}."
+        )
+
+    # TODO:
+    # 1) Ideally we would check that the path is not a symlink here, but it doesn't seem to be doable in Python... ?
+    # 2) Elegant way of dealing with line endings in Windows (see https://github.com/nasa/fprime/issues/2566)
+    return 0
+
+
+def setup_git_repo(project_path: Path, tag: str):
     """Sets up a new git project"""
-    # Retrieve latest F' release
-    with urlopen("https://api.github.com/repos/nasa/fprime/releases/latest") as url:
-        fprime_latest_release = json.loads(url.read().decode())
-        latest_tag_name = fprime_latest_release["tag_name"]
-
     # Initialize git repository
     subprocess.run(["git", "init"], cwd=project_path)
 
-    # Add F' as a submodule
-    LOGGER.info(f"Checking out F´ submodule at latest release: {latest_tag_name}")
+    # Retrieve latest F´ release
+    if tag:
+        tag_name = tag
+    else:
+        tag_name = get_latest_fprime_release()
+
+    # Add F´ as a submodule
+    LOGGER.info(f"Checking out F´ submodule at version: {tag_name}")
     subprocess.run(
         [
             "git",
@@ -145,19 +173,22 @@ def setup_git_repo(project_path: Path):
     fprime_path = project_path / "fprime"
 
     subprocess.run(
-        ["git", "fetch", "origin", "--depth", "1", "tag", latest_tag_name],
+        ["git", "fetch", "origin", "--depth", "1", "tag", tag_name],
         cwd=fprime_path,
         capture_output=True,
     )
 
     # Checkout requested branch/tag
     res = subprocess.run(
-        ["git", "checkout", latest_tag_name],
+        ["git", "checkout", tag_name],
         cwd=fprime_path,
         capture_output=True,
     )
     if res.returncode != 0:
-        LOGGER.error(f"Unable to checkout tag: {latest_tag_name}. Exit...")
+        LOGGER.error(f"Unable to checkout tag: {tag_name}.")
+        LOGGER.error(
+            "Please set the --tag environment variable to a valid F´ release tag and try again."
+        )
         sys.exit(1)
 
 
@@ -208,6 +239,45 @@ def generate_boilerplate_project(project_path: Path, project_name: str):
             file.rename(file.parent / file.name.replace("-template", ""))
 
 
+def get_latest_fprime_release() -> str:
+    """Retrieves the latest F´ release from GitHub
+
+    Note: Using the GitHub API is the simplest and most reliable way to get the
+    latest release. However, in some cases the API may not be respond (e.g. rate
+    limit exceeded). In these cases, we fall back to using `git ls-remote` to get
+    the latest tag. This approach seems fragile (will the format of the output change?),
+    but it's the best we can do without the API.
+    """
+    try:
+        with urlopen(
+            "https://api.github.com/repos/nasa/fprime/releases/latestee"
+        ) as url:
+            fprime_latest_release = json.loads(url.read().decode())
+            return fprime_latest_release["tag_name"]
+    except HTTPError:
+        stdout = subprocess.Popen(
+            [
+                "git",
+                "ls-remote",
+                "--tags",
+                "--refs",
+                "https://github.com/nasa/fprime",
+            ],
+            stdout=subprocess.PIPE,
+        ).stdout.readlines()
+
+        import re
+
+        # This regex only matches tags in the format v1.2.3, and NOT v1.2.3-rc1 or v1.2.3a1 etc...
+        tags = re.findall(r"v\d+\.\d+\.\d+\b", "".join(map(str, stdout)))
+
+        # Used to compare semantic versions, e.g. v3.11.0 > v3.7.0
+        def version_tuple(version):
+            return tuple(map(int, version.lstrip("v").split(".")))
+
+        return max(tags, key=version_tuple)
+
+
 def print_success_message(project_name: str):
     """Prints a success message"""
     print(
@@ -234,3 +304,30 @@ fprime-util new --deployment
 ################################################################
 """
     )
+
+
+#################### Exceptions ####################
+
+
+class BootstrapProjectError(Exception):
+    pass
+
+
+class UnsupportedPythonVersion(BootstrapProjectError):
+    pass
+
+
+class GitNotInstalled(BootstrapProjectError):
+    pass
+
+
+class UnsupportedPlatform(BootstrapProjectError):
+    pass
+
+
+class InvalidProjectName(BootstrapProjectError):
+    pass
+
+
+class OutDirectoryError(BootstrapProjectError):
+    pass
