@@ -9,7 +9,13 @@ Bootstraps a new project using cookiecuter
 import logging
 import subprocess
 from pathlib import Path
-from fprime_bootstrap.common import run_system_checks, setup_venv, print_success_message, OutDirectoryError, GitCloneError
+from fprime_bootstrap.common import (
+    run_system_checks,
+    setup_venv,
+    print_success_message,
+    OutDirectoryError,
+    GitCloneError,
+)
 
 from typing import TYPE_CHECKING
 
@@ -57,7 +63,7 @@ def clone_git_repo(target_dir: Path, remote_url: str, new_name: str = None) -> P
         # Remove .git extension if present and patiently wait for Python3.9 for str.removesuffix()
         if target_name.endswith(".git"):
             target_name = target_name[:-4]
-    
+
     # Add F´ as a submodule
     LOGGER.info(f"Cloning out F´ project in {target_dir} ...")
     run = subprocess.run(
@@ -76,5 +82,3 @@ def clone_git_repo(target_dir: Path, remote_url: str, new_name: str = None) -> P
         raise GitCloneError(f"Failed to clone repository: {remote_url}")
 
     return target_dir / target_name
-
-

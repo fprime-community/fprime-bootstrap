@@ -47,7 +47,9 @@ def main():
         help="Version of F´ to checkout (default: latest release)",
     )
 
-    clone_parser = subparsers.add_parser("clone", help="Clone an existing remote F´ project")
+    clone_parser = subparsers.add_parser(
+        "clone", help="Clone an existing remote F´ project"
+    )
     clone_parser.add_argument(
         dest="url",
         type=str,

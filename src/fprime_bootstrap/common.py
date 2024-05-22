@@ -107,8 +107,10 @@ class UnsupportedPythonVersion(BootstrapProjectError):
 class GitNotInstalled(BootstrapProjectError):
     pass
 
+
 class GitCloneError(BootstrapProjectError):
     pass
+
 
 class UnsupportedPlatform(BootstrapProjectError):
     pass
