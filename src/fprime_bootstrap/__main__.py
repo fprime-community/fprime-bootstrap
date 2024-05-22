@@ -12,7 +12,9 @@ import os
 import logging
 import argparse
 
-from fprime_bootstrap.bootstrap_project import bootstrap_project, BootstrapProjectError
+from fprime_bootstrap.bootstrap_project import bootstrap_project
+from fprime_bootstrap.clone_project import clone_project
+from fprime_bootstrap.common import BootstrapError
 
 logging.basicConfig(
     format="[%(levelname)s] %(message)s",
@@ -45,13 +47,46 @@ def main():
         help="Version of F´ to checkout (default: latest release)",
     )
 
+    clone_parser = subparsers.add_parser("clone", help="Clone an existing remote F´ project")
+    clone_parser.add_argument(
+        dest="url",
+        type=str,
+        help="URL of the remote repository to clone",
+    )
+    clone_parser.add_argument(
+        "--path",
+        type=str,
+        help="Path to create the project in (default: current directory)",
+        default=os.getcwd(),
+    )
+    clone_parser.add_argument(
+        "--no-venv",
+        action="store_true",
+        help="Do not create a virtual environment in the project",
+        default=False,
+    )
+    clone_parser.add_argument(
+        "--fprime-subpath",
+        type=str,
+        help="Relative path from root of project to F´ submodule (default: ./fprime)",
+        default="./fprime",
+    )
+    clone_parser.add_argument(
+        "--rename",
+        type=str,
+        help="Name of the local project directory (default: remote repository name)",
+        default=os.getcwd(),
+    )
     args = parser.parse_args()
 
     try:
         if args.command == "project":
             return bootstrap_project(args)
 
-    except BootstrapProjectError as e:
+        if args.command == "clone":
+            return clone_project(args)
+
+    except BootstrapError as e:
         LOGGER.error(e)
         return 1
 

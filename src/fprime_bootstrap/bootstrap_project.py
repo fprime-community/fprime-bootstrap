@@ -15,6 +15,14 @@ from urllib.request import urlopen
 from urllib.error import HTTPError
 from pathlib import Path
 
+from fprime_bootstrap.common import (
+    run_system_checks,
+    print_success_message,
+    setup_venv,
+    OutDirectoryError,
+    InvalidProjectName,
+)
+
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -96,30 +104,6 @@ def check_project_name(project_name: str) -> bool:
             )
 
 
-def run_system_checks():
-    """Runs system checks"""
-    # Check Python version
-    if sys.version_info < (3, 8):
-        raise UnsupportedPythonVersion(
-            "Python 3.8 or higher is required to use the F´ Python tooling suite. "
-            "Please install Python 3.8 or higher and try again."
-        )
-
-    # Check if Git is installed and available - needed for cloning F´ as submodule
-    if not shutil.which("git"):
-        raise GitNotInstalled(
-            "Git is not installed or in PATH. Please install Git and try again."
-        )
-
-    # Check if running on Windows
-    if sys.platform == "win32":
-        raise UnsupportedPlatform(
-            "F´ does not currently support Windows. Please use WSL (https://learn.microsoft.com/en-us/windows/wsl/about), "
-            "or a Linux or macOS system. If you are using WSL, please ensure you are running this script from WSL."
-        )
-    return 0
-
-
 def run_context_checks(project_path: Path):
     real_path = Path(project_path).resolve()
 
@@ -192,36 +176,6 @@ def setup_git_repo(project_path: Path, tag: str):
         sys.exit(1)
 
 
-def setup_venv(project_path: Path):
-    """Sets up a new virtual environment"""
-    venv_path = project_path / "fprime-venv"
-
-    LOGGER.info(f"Creating virtual environment in {venv_path} ...")
-    subprocess.run([Path(sys.executable), "-m", "venv", venv_path])
-
-    # Find pip
-    pip = None
-    if (venv_path / "bin/pip").exists():
-        pip = venv_path / "bin/pip"
-    elif (venv_path / "bin/pip3").exists():
-        pip = venv_path / "bin/pip3"
-    else:
-        raise FileNotFoundError("Could not find pip executable in venv.")
-
-    LOGGER.info("Upgrading pip...")
-    subprocess.run([pip, "install", "--upgrade", "pip"])
-
-    LOGGER.info("Installing F´ dependencies...")
-    subprocess.run(
-        [
-            pip,
-            "install",
-            "-Ur",
-            project_path / "fprime" / "requirements.txt",
-        ]
-    )
-
-
 def generate_boilerplate_project(project_path: Path, project_name: str):
     """Generates a new project"""
     source = Path(__file__).parent / "templates/fprime-project-template"
@@ -276,58 +230,3 @@ def get_latest_fprime_release() -> str:
             return tuple(map(int, version.lstrip("v").split(".")))
 
         return max(tags, key=version_tuple)
-
-
-def print_success_message(project_name: str):
-    """Prints a success message"""
-    print(
-        f"""
-################################################################
-
-Congratulations! You have successfully created a new F´ project.
-
-A git repository has been initialized and F´ has been added as a
-submodule, you can now create your first commit.
-
-Get started with your F´ project:
-
--- Remember to always activate the virtual environment --
-cd {project_name}
-. fprime-venv/bin/activate
-
--- Create a new component --
-fprime-util new --component
-
--- Create a new deployment --
-fprime-util new --deployment
-
-################################################################
-"""
-    )
-
-
-#################### Exceptions ####################
-
-
-class BootstrapProjectError(Exception):
-    pass
-
-
-class UnsupportedPythonVersion(BootstrapProjectError):
-    pass
-
-
-class GitNotInstalled(BootstrapProjectError):
-    pass
-
-
-class UnsupportedPlatform(BootstrapProjectError):
-    pass
-
-
-class InvalidProjectName(BootstrapProjectError):
-    pass
-
-
-class OutDirectoryError(BootstrapProjectError):
-    pass
