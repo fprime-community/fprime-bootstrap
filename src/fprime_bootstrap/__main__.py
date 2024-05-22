@@ -77,7 +77,6 @@ def main():
         "--rename",
         type=str,
         help="Name of the local project directory (default: remote repository name)",
-        default=os.getcwd(),
     )
     args = parser.parse_args()
 
