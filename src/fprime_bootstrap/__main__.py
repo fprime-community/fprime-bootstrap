@@ -68,12 +68,6 @@ def main():
         default=False,
     )
     clone_parser.add_argument(
-        "--fprime-subpath",
-        type=str,
-        help="Relative path from root of project to F´ submodule (default: ./fprime)",
-        default="./fprime",
-    )
-    clone_parser.add_argument(
         "--rename",
         type=str,
         help="Name of the local project directory (default: remote repository name)",
