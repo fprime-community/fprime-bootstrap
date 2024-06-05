@@ -1,4 +1,4 @@
-# Semantic code analysis with CodeQL 
+# Semantic code analysis with CodeQL
 # see https://github.com/github/codeql-action
 name: "CodeQL Security Scan"
 
@@ -21,11 +21,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'python' ]
+        language: [python]
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
@@ -35,6 +35,6 @@ jobs:
         queries: security-extended
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v2
+      uses: github/codeql-action/analyze@v3
       with:
         category: "/language:${{matrix.language}}"
