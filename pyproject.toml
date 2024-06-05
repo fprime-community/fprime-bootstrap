@@ -7,7 +7,7 @@ name = "fprime-bootstrap"
 dynamic = ["version"]
 description = "F Prime Flight Software bootstrapping tool"
 readme = "README.md"
-requires-python = ">=3.6"
+requires-python = ">=3.8"
 license = {file = "LICENSE.txt"}
 keywords = ["fprime", "embedded", "nasa", "flight", "software"]
 authors = [
