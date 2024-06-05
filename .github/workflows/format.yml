@@ -3,21 +3,24 @@ name: Format Python
 
 on:
   push:
-    branches: [ devel ]
+    branches: [devel]
   pull_request:
-    branches: [ devel ]
+    branches: [devel]
 
 jobs:
   format:
-      name: Format
-      runs-on: ubuntu-latest
-      steps:
+    name: Format
+    runs-on: ubuntu-latest
+    steps:
       - uses: actions/checkout@v4
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: 3.11
-      - name: Check formatting
-        run: |
-          pip install click==8.0.4 black==21.6b0
-          black --check --diff ./
+          python-version-file: .python-version
+          cache: pip
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('.pre-commit-config.yaml') }}
+      - name: Run pre-commit
+        run: pipx run -- pre-commit run
