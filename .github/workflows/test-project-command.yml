@@ -1,0 +1,37 @@
+name: Test Project Command
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-project:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.8'
+
+      - name: Install fprime-tools
+        run: |
+          pip install fprime-tools
+
+      - name: Install fprime-bootstrap
+        run: |
+          pip install .
+
+      - name: Create new project
+        run: |
+          echo "TestProject" | fprime-bootstrap project
+
+      - name: Generate and build project
+        run: |
+          cd TestProject
+          fprime-util generate
+          fprime-util build -j4
