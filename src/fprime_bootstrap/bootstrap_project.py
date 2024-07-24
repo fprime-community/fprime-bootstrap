@@ -203,9 +203,7 @@ def get_latest_fprime_release() -> str:
     but it's the best we can do without the API.
     """
     try:
-        with urlopen(
-            "https://api.github.com/repos/nasa/fprime/releases/latestee"
-        ) as url:
+        with urlopen("https://api.github.com/repos/nasa/fprime/releases/latest") as url:
             fprime_latest_release = json.loads(url.read().decode())
             return fprime_latest_release["tag_name"]
     except HTTPError:
