@@ -26,24 +26,13 @@ Options:
 
 ## Clone existing projects
 
-Given an existing repository that contains a project, you can use `fprime-bootstrap` to get it onto your system and have it be set up with the project's virtual environment.
+Given an existing repository that contains an F Prime project, you can use `fprime-bootstrap` to get it onto your system and have it be set up with the project's virtual environment.
 
-Simply, provided a repo that contains your F Prime project, you can run:
+Provided a repo that contains an F Prime project, you can run:
 
 ```sh
 # example repo is LED Blinker project
 fprime-bootstrap clone https://github.com/fprime-community/fprime-workshop-led-blinker
 ```
 
-Some more complex use cases of the command:
-
-```sh
-# rename the project
-fprime-bootstrap clone --rename led-blinker --no-venv https://github.com/fprime-community/fprime-workshop-led-blinker.git
-
-# change clone path
-fprime-bootstrap clone --path ./other/path https://github.com/fprime-community/fprime-workshop-led-blinker
-
-# in-tree project structure (for older F Prime projects)
-fprime-bootstrap clone --fprime-subpath ./ https://github.com/nasa/fprime
-```
+The options listed above in the `project` command apply, and more can be listed with `fprime-bootstrap clone --help`.
