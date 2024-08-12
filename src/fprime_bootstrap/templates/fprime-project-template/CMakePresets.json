@@ -36,6 +36,7 @@
     },
       {
         "name": "fprime-ninja",
+        "inherits": "fprime",
         "displayName": "F´ Release (Ninja) Preset",
         "description": "F´ release build using ninja and local fprime-venv",
         "generator": "Ninja"
