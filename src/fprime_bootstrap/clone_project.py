@@ -18,7 +18,7 @@ from fprime_bootstrap.common import (
     GitCloneError,
 )
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Tuple
 
 if TYPE_CHECKING:
     import argparse
@@ -57,7 +57,7 @@ def clone_project(parsed_args: "argparse.Namespace"):
 
 def clone_git_repo(
     target_dir: Path, remote_url: str, new_name: str = None
-) -> tuple[Path, Path]:
+) -> Tuple[Path, Path]:
     """Clone an F´ project using git. Uses new_name if provided for local project name
     Returns the path to the project and the path to the F´ submodule within the project
     """
