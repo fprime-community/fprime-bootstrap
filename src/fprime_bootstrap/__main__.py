@@ -46,6 +46,12 @@ def main():
         type=str,
         help="Version of F´ to checkout (default: latest release)",
     )
+    project_parser.add_argument(
+        "--populate",
+        action="store_true",
+        default=False,
+        help="Populate an existing direcory with a new F´ project (default: False)",
+    )
 
     clone_parser = subparsers.add_parser(
         "clone", help="Clone an existing remote F´ project"
