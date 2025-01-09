@@ -45,14 +45,18 @@ def bootstrap_project(parsed_args: "argparse.Namespace"):
     target_dir = Path(parsed_args.path)
     # Ask user for project name
     project_name = (
-        input(f"Project name ({DEFAULT_PROJECT_NAME}): ") or DEFAULT_PROJECT_NAME
-    ) if not parsed_args.populate else target_dir.name
+        (input(f"Project name ({DEFAULT_PROJECT_NAME}): ") or DEFAULT_PROJECT_NAME)
+        if not parsed_args.populate
+        else target_dir.name
+    )
     check_project_name(project_name)
 
     project_path = target_dir / project_name if not parsed_args.populate else target_dir
 
     try:
-        generate_boilerplate_project(project_path, project_name, populate=parsed_args.populate)
+        generate_boilerplate_project(
+            project_path, project_name, populate=parsed_args.populate
+        )
         setup_git_repo(project_path, parsed_args.tag)
         if not parsed_args.no_venv:
             setup_venv(project_path)
@@ -178,7 +182,9 @@ def setup_git_repo(project_path: Path, tag: str):
         sys.exit(1)
 
 
-def generate_boilerplate_project(project_path: Path, project_name: str, populate: bool = False):
+def generate_boilerplate_project(
+    project_path: Path, project_name: str, populate: bool = False
+):
     """Generates a new project"""
     source = Path(__file__).parent / "templates/fprime-project-template"
     # copy files from template into target path
