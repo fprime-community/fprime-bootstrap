@@ -31,7 +31,7 @@ def run_system_checks():
     return 0
 
 
-def setup_venv(project_path: Path, fprime_subpath: Path = Path("fprime")):
+def setup_venv(project_path: Path, fprime_subpath: Path = Path("lib/fprime")):
     """Sets up a new virtual environment"""
     venv_path = project_path / "fprime-venv"
 

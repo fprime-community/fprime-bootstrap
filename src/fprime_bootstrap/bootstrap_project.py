@@ -130,6 +130,8 @@ def setup_git_repo(project_path: Path, tag: str):
     else:
         tag_name = get_latest_fprime_release()
 
+    library_path = project_path / "lib"
+
     # Add F´ as a submodule
     LOGGER.info(f"Checking out F´ submodule at version: {tag_name}")
     subprocess.run(
@@ -141,7 +143,7 @@ def setup_git_repo(project_path: Path, tag: str):
             "1",
             "https://github.com/nasa/fprime.git",
         ],
-        cwd=project_path,
+        cwd=library_path,
     )
     # Checkout F´ submodules (e.g. googletest)
     res = subprocess.run(
@@ -154,7 +156,7 @@ def setup_git_repo(project_path: Path, tag: str):
             "[WARNING] Unable to initialize submodules. Functionality may be limited."
         )
 
-    fprime_path = project_path / "fprime"
+    fprime_path = library_path / "fprime"
 
     subprocess.run(
         ["git", "fetch", "origin", "--depth", "1", "tag", tag_name],
