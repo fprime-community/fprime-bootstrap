@@ -181,6 +181,10 @@ def setup_git_repo(project_path: Path, tag: str):
         )
         sys.exit(1)
 
+    # Initial commit
+    subprocess.run(["git", "add", "."], cwd=project_path, capture_output=True)
+    subprocess.run(["git", "commit", "-m", "Initial commit (by fprime-bootstrap)"], cwd=project_path, capture_output=True)
+
 
 def generate_boilerplate_project(
     project_path: Path, project_name: str, populate: bool = False
