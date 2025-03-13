@@ -181,6 +181,21 @@ def setup_git_repo(project_path: Path, tag: str):
         )
         sys.exit(1)
 
+    # Initial commit
+    subprocess.run(
+        ["git", "commit", "-m", "Initial commit (by fprime-bootstrap)"],
+        cwd=project_path,
+        capture_output=True,
+    )
+    subprocess.run(["git", "add", "."], cwd=project_path, capture_output=True)
+    res = subprocess.run(
+        ["git", "commit", "-m", "Add F Prime project content (by fprime-bootstrap)"],
+        cwd=project_path,
+        capture_output=True,
+    )
+    if res.returncode != 0:
+        LOGGER.warning("Unable to perform initial commit.")
+
 
 def generate_boilerplate_project(
     project_path: Path, project_name: str, populate: bool = False
