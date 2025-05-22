@@ -42,6 +42,12 @@ def bootstrap_project(parsed_args: "argparse.Namespace"):
     # Run contextual checks, such as parent path and project name
     run_context_checks(parsed_args.path)
 
+    # Retrieve latest F´ release
+    if parsed_args.tag:
+        tag_name = parsed_args.tag
+    else:
+        tag_name = get_latest_fprime_release()
+
     target_dir = Path(parsed_args.path)
     # Ask user for project name
     project_name = (
@@ -55,9 +61,9 @@ def bootstrap_project(parsed_args: "argparse.Namespace"):
 
     try:
         generate_boilerplate_project(
-            project_path, project_name, populate=parsed_args.populate
+            project_path, project_name, tag_name, populate=parsed_args.populate
         )
-        setup_git_repo(project_path, parsed_args.tag)
+        setup_git_repo(project_path, tag_name)
         if not parsed_args.no_venv:
             setup_venv(project_path)
 
@@ -123,16 +129,10 @@ def run_context_checks(project_path: Path):
     return 0
 
 
-def setup_git_repo(project_path: Path, tag: str):
+def setup_git_repo(project_path: Path, tag_name: str):
     """Sets up a new git project"""
     # Initialize git repository
     subprocess.run(["git", "init"], cwd=project_path)
-
-    # Retrieve latest F´ release
-    if tag:
-        tag_name = tag
-    else:
-        tag_name = get_latest_fprime_release()
 
     library_path = project_path / "lib"
 
@@ -197,8 +197,17 @@ def setup_git_repo(project_path: Path, tag: str):
         LOGGER.warning("Unable to perform initial commit.")
 
 
+def rename_template_file(file: Path, project_name: str):
+    """Rename a file, removing -template and replacing {{FPRIME_PROJECT_NAME}}"""
+    new_name = file.name.replace(r"{{FPRIME_PROJECT_NAME}}", project_name).replace(
+        "-template", ""
+    )
+    if new_name != file.name:
+        file.rename(file.parent / new_name)
+
+
 def generate_boilerplate_project(
-    project_path: Path, project_name: str, populate: bool = False
+    project_path: Path, project_name: str, tag: str, populate: bool = False
 ):
     """Generates a new project"""
     source = Path(__file__).parent / "templates/fprime-project-template"
@@ -211,9 +220,17 @@ def generate_boilerplate_project(
             with file.open("r") as f:
                 contents = f.read()
             with file.open("w") as f:
-                f.write(contents.replace(r"{{FPRIME_PROJECT_NAME}}", project_name))
-            # Rename file by removing the -template suffix
-            file.rename(file.parent / file.name.replace("-template", ""))
+                f.write(
+                    contents.replace(r"{{FPRIME_PROJECT_NAME}}", project_name).replace(
+                        "{{ TAG }}", tag
+                    )
+                )
+            rename_template_file(file, project_name)
+
+    # After updating all the files, update the folders
+    for directory in project_path.rglob("*-template"):
+        if directory.is_dir():
+            rename_template_file(directory, project_name)
 
 
 def get_latest_fprime_release() -> str:
