@@ -58,7 +58,10 @@ def bootstrap_project(parsed_args: "argparse.Namespace"):
     # Ask user for project name
     default_project_name = kebab_to_pascal_case(repo_name)
     project_namespace = (
-        (input(f"Project top-level namespace [{default_project_name}]: ") or default_project_name)
+        (
+            input(f"Project top-level namespace [{default_project_name}]: ")
+            or default_project_name
+        )
         if not parsed_args.populate
         else target_dir.name
     )
@@ -262,5 +265,5 @@ def kebab_to_pascal_case(kebab_string):
     Returns:
       The string converted to PascalCase.
     """
-    words = kebab_string.split('-')
-    return ''.join(word.capitalize() for word in words)
+    words = kebab_string.split("-")
+    return "".join(word.capitalize() for word in words)
