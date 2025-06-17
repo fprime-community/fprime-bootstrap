@@ -42,7 +42,7 @@ def clone_project(parsed_args: "argparse.Namespace"):
         if not parsed_args.no_venv:
             setup_venv(project_path, fprime_path)
 
-        print_success_message(project_path)
+        print_success_message(str(project_path))
 
     except (PermissionError, FileExistsError) as out_directory_error:
         raise OutDirectoryError(

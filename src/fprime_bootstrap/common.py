@@ -51,14 +51,17 @@ def setup_venv(project_path: Path, fprime_subpath: Path = Path("lib/fprime")):
     subprocess.run([pip, "install", "--upgrade", "pip"])
 
     LOGGER.info("Installing F´ dependencies...")
-    subprocess.run(
-        [
-            pip,
-            "install",
-            "-Ur",
-            project_path / fprime_subpath / "requirements.txt",
-        ]
-    )
+    if Path(project_path / "requirements.txt").exists():
+        subprocess.run([pip, "install", "-Ur", project_path / "requirements.txt"])
+    else:
+        subprocess.run(
+            [
+                pip,
+                "install",
+                "-Ur",
+                project_path / fprime_subpath / "requirements.txt",
+            ]
+        )
 
 
 def print_success_message(project_name: str):

@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     import argparse
 
 
-DEFAULT_PROJECT_NAME = "MyProject"
+DEFAULT_REPO_NAME = "my-fprime-project"
 
 LOGGER = logging.getLogger("fprime_bootstrap")
 
@@ -49,25 +49,32 @@ def bootstrap_project(parsed_args: "argparse.Namespace"):
         tag_name = get_latest_fprime_release()
 
     target_dir = Path(parsed_args.path)
-    # Ask user for project name
-    project_name = (
-        (input(f"Project name ({DEFAULT_PROJECT_NAME}): ") or DEFAULT_PROJECT_NAME)
+    # Ask for repository name
+    repo_name = (
+        (input(f"Project repository name [{DEFAULT_REPO_NAME}]: ") or DEFAULT_REPO_NAME)
         if not parsed_args.populate
         else target_dir.name
     )
-    check_project_name(project_name)
+    # Ask user for project name
+    default_project_name = kebab_to_pascal_case(repo_name)
+    project_namespace = (
+        (input(f"Project top-level namespace [{default_project_name}]: ") or default_project_name)
+        if not parsed_args.populate
+        else target_dir.name
+    )
+    check_project_name(project_namespace)
 
-    project_path = target_dir / project_name if not parsed_args.populate else target_dir
+    project_path = target_dir / repo_name if not parsed_args.populate else target_dir
 
     try:
         generate_boilerplate_project(
-            project_path, project_name, tag_name, populate=parsed_args.populate
+            project_path, project_namespace, tag_name, populate=parsed_args.populate
         )
         setup_git_repo(project_path, tag_name)
         if not parsed_args.no_venv:
             setup_venv(project_path)
 
-        print_success_message(project_name)
+        print_success_message(repo_name)
 
     except (PermissionError, FileExistsError) as out_directory_error:
         raise OutDirectoryError(
@@ -81,37 +88,13 @@ def bootstrap_project(parsed_args: "argparse.Namespace"):
 
 
 def check_project_name(project_name: str) -> bool:
-    """Checks if a project name is valid"""
-    invalid_characters = [
-        "#",
-        "%",
-        "&",
-        "{",
-        "}",
-        "/",
-        "\\",
-        "<",
-        ">",
-        "*",
-        "?",
-        " ",
-        "$",
-        "!",
-        "'",
-        '"',
-        ":",
-        "@",
-        "+",
-        "`",
-        "|",
-        "=",
-    ]
-    for char in project_name:
-        if char in invalid_characters:
-            raise InvalidProjectName(
-                f"Invalid character in project name: {char}. "
-                "Project name cannot contain special characters or spaces."
-            )
+    """Checks if a project name is valid. Project name should be a valid
+    FPP identifier, it should only contain alphanumeric characters and underscores."""
+    if not project_name.isalnum():
+        raise InvalidProjectName(
+            f"Invalid project name: {project_name}. "
+            "Project name should only contain alphanumeric characters and underscores."
+        )
 
 
 def run_context_checks(project_path: Path):
@@ -268,3 +251,16 @@ def get_latest_fprime_release() -> str:
             return tuple(map(int, version.lstrip("v").split(".")))
 
         return max(tags, key=version_tuple)
+
+
+def kebab_to_pascal_case(kebab_string):
+    """Converts a kebab-case string to PascalCase.
+
+    Args:
+      kebab_string: The string in kebab-case.
+
+    Returns:
+      The string converted to PascalCase.
+    """
+    words = kebab_string.split('-')
+    return ''.join(word.capitalize() for word in words)
