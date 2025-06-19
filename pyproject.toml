@@ -62,6 +62,17 @@ fprime-bootstrap = "fprime_bootstrap.__main__:main"
 ####
 [tool.setuptools_scm]
 
+####
+# pytest custom marks for grouping the tests
+####
+[tool.pytest.ini_options]
+markers = [
+    "project: marks bootstrap_project, no_template_files, and fprime_project_name_replace tests",
+    "bootstrap: marks bootstrap_project test",
+    "template: marks no_template_files tests",
+    "replace: marks fprime_project_name_replace",
+    "clone: marks bootstrap_clone_test"
+]
 
 ####
 # Additional notes
