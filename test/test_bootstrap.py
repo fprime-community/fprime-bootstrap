@@ -88,16 +88,14 @@ def test_fprime_project_name_replace():
 
                 for index in range(len(contents)):
                     if contents[index].find(r"{{FPRIME_PROJECT_NAME}}") != -1:
-                        clean_string = contents[index].replace('\n', '')
-                        lines.append(
-                            f"\tLine {index + 1}: {clean_string}"
-                        )
+                        clean_string = contents[index].replace("\n", "")
+                        lines.append(f"\tLine {index + 1}: {clean_string}")
 
                 if lines:
                     files_dict.update({str(file): lines})
 
     for file_path, value in files_dict.items():
-        error_strings.append("{}\n{}".format(file_path, '\n'.join(value)))
+        error_strings.append("{}\n{}".format(file_path, "\n".join(value)))
 
     assert not files_dict, "\n" + "\n".join(error_strings)
 
