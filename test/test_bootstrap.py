@@ -1,3 +1,12 @@
+"""
+=================================================
+Filename   : test_bootstrap.py
+Author     : rmzmrnn
+Created    : 2025-06-19
+Description: pytest script for fprime-bootstrap
+=================================================
+"""
+
 import subprocess
 import sys
 import os
