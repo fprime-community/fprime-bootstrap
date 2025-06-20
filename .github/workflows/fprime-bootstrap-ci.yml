@@ -1,4 +1,4 @@
-name: FPrime Bootstrap test
+name: FPrime Bootstrap Test
 
 on:
   push:
