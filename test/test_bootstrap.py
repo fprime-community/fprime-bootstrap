@@ -20,8 +20,8 @@ TEMPLATE_FOLDER = "src/fprime_bootstrap/templates/fprime-project-template"
 GIT_REPOSITORY = "https://github.com/fprime-community/fprime-workshop-led-blinker"
 
 
-@pytest.mark.project
 @pytest.mark.bootstrap
+@pytest.mark.project
 def test_bootstrap_project():
     """
     Tests if bootstrap project works properly
@@ -52,7 +52,7 @@ def test_bootstrap_project():
     assert result.returncode == 0
 
 
-@pytest.mark.project
+@pytest.mark.bootstrap
 @pytest.mark.template
 def test_no_template_files():
     """
@@ -70,7 +70,7 @@ def test_no_template_files():
         pytest.fail("\n" + "\n".join(template_files_list))
 
 
-@pytest.mark.project
+@pytest.mark.bootstrap
 @pytest.mark.replace
 def test_fprime_project_name_replace():
     """
