@@ -53,9 +53,12 @@ def test_no_template_files():
     project_folder = Path(TMP_FOLDER, DEFAULT_PROJECT_NAME)
     assert os.path.exists(project_folder)
 
-    template_files_list = [str(file) for file in project_folder.rglob("*-template")]
+    template_files_list = [
+        "\t" + str(file) for file in project_folder.rglob("*-template")
+    ]
 
-    assert not template_files_list, "\n" + "\n".join(template_files_list)
+    if template_files_list:
+        pytest.fail("\n" + "\n".join(template_files_list))
 
 
 @pytest.mark.project
@@ -65,8 +68,11 @@ def test_fprime_project_name_replace():
     Tests if {{FPRIME_PROJECT_NAME}} has been replaced with the project name.
     """
 
-    project_folder = os.path.join(TMP_FOLDER, DEFAULT_PROJECT_NAME)
+    project_folder = Path(TMP_FOLDER, DEFAULT_PROJECT_NAME)
     assert os.path.exists(project_folder)
+
+    if list(project_folder.rglob("*-template")):
+        pytest.fail("*-template files are not properly renamed")
 
     template_folder = Path(TEMPLATE_FOLDER)
     project_files = [
@@ -100,7 +106,8 @@ def test_fprime_project_name_replace():
     for file_path, value in files_dict.items():
         error_strings.append("{}\n{}".format(file_path, "\n".join(value)))
 
-    assert not files_dict, "\n" + "\n".join(error_strings)
+    if files_dict:
+        pytest.fail("\n" + "\n".join(error_strings))
 
 
 @pytest.mark.clone
