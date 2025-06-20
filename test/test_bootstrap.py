@@ -88,8 +88,11 @@ def test_fprime_project_name_replace():
 
                 for index in range(len(contents)):
                     if contents[index].find(r"{{FPRIME_PROJECT_NAME}}") != -1:
-                        clean_string = contents[index].replace("\n", "")
-                        lines.append(f"\tLine {index + 1}: {clean_string}")
+                        lines.append(
+                            "\tLine {}: {}".format(
+                                index + 1, contents[index].replace("\n", "")
+                            )
+                        )
 
                 if lines:
                     files_dict.update({str(file): lines})
