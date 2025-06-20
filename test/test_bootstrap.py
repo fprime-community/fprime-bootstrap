@@ -97,7 +97,7 @@ def test_fprime_project_name_replace():
                     files_dict.update({str(file): lines})
 
     for file_path, value in files_dict.items():
-        error_strings.append(f"{file_path}\n{'\n'.join(value)}")
+        error_strings.append("{}\n{}".format(file_path, '\n'.join(value)))
 
     assert not files_dict, "\n" + "\n".join(error_strings)
 
