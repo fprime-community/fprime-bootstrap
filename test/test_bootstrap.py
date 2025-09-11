@@ -20,19 +20,37 @@ TEMPLATE_FOLDER = "src/fprime_bootstrap/templates/fprime-project-template"
 GIT_REPOSITORY = "https://github.com/fprime-community/fprime-workshop-led-blinker"
 
 
+@pytest.fixture(scope="session", autouse=True)
+def cleanup_tmp():
+    """
+    Fixture to clean up the tmp directory after all tests complete
+    """
+    yield  # This allows tests to run first
+    # Cleanup after all tests in the session
+    if os.path.exists(TMP_FOLDER):
+        shutil.rmtree(TMP_FOLDER)
+
+
+@pytest.fixture
+def setup_tmp_folder():
+    """
+    Fixture to ensure tmp folder exists for each test
+    """
+    if not os.path.exists(TMP_FOLDER):
+        os.mkdir(TMP_FOLDER)
+    yield TMP_FOLDER
+
+
 @pytest.mark.bootstrap
 @pytest.mark.project
-def test_bootstrap_project():
+def test_bootstrap_project(setup_tmp_folder):
     """
     Tests if bootstrap project works properly
     """
 
-    if not os.path.exists(TMP_FOLDER):
-        os.mkdir(TMP_FOLDER)
-    else:
-        project_folder = os.path.join(TMP_FOLDER, DEFAULT_PROJECT_NAME)
-        if os.path.exists(project_folder):
-            shutil.rmtree(project_folder)
+    project_folder = os.path.join(TMP_FOLDER, DEFAULT_PROJECT_NAME)
+    if os.path.exists(project_folder):
+        shutil.rmtree(project_folder)
 
     result = subprocess.run(
         [
@@ -121,19 +139,15 @@ def test_fprime_project_name_replace():
 
 
 @pytest.mark.clone
-def test_bootstrap_clone():
+def test_bootstrap_clone(setup_tmp_folder):
     """
     Tests if bootstrap clone works properly
     """
 
     git_folder_name = GIT_REPOSITORY.split("/")[-1]
-
-    if not os.path.exists(TMP_FOLDER):
-        os.mkdir(TMP_FOLDER)
-    else:
-        git_project_folder = os.path.join(TMP_FOLDER, git_folder_name)
-        if os.path.exists(git_project_folder):
-            shutil.rmtree(git_project_folder)
+    git_project_folder = os.path.join(TMP_FOLDER, git_folder_name)
+    if os.path.exists(git_project_folder):
+        shutil.rmtree(git_project_folder)
 
     result = subprocess.run(
         [
