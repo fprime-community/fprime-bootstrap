@@ -42,10 +42,11 @@ def test_bootstrap_project():
             "project",
             "--path",
             os.path.join("..", TMP_FOLDER),
+            "--no-venv",
         ],
         cwd="src",
         capture_output=True,
-        input=DEFAULT_PROJECT_NAME,
+        input=DEFAULT_PROJECT_NAME + "\n" + DEFAULT_PROJECT_NAME + "\n",
         text=True,
     )
 
@@ -143,6 +144,7 @@ def test_bootstrap_clone():
             GIT_REPOSITORY,
             "--path",
             os.path.join("..", TMP_FOLDER),
+            "--no-venv",
         ],
         cwd="src",
         capture_output=True,
