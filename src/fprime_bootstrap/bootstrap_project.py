@@ -11,6 +11,7 @@ import shutil
 import logging
 import subprocess
 import sys
+import re
 from urllib.request import urlopen
 from urllib.error import HTTPError
 from pathlib import Path
@@ -89,10 +90,10 @@ def bootstrap_project(parsed_args: "argparse.Namespace"):
 def check_project_name(project_name: str) -> bool:
     """Checks if a project name is valid. Project name should be a valid
     FPP identifier, it should only contain alphanumeric characters and underscores."""
-    if not project_name.isalnum():
+    if not re.match(r'^[A-Za-z][A-Za-z0-9_]*$', project_name):
         raise InvalidProjectName(
             f"Invalid project name: {project_name}. "
-            "Project name should only contain alphanumeric characters and underscores."
+            "Project name must start with a letter and only contain alphanumeric characters and underscores."
         )
 
 
