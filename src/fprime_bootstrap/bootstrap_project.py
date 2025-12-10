@@ -90,7 +90,7 @@ def bootstrap_project(parsed_args: "argparse.Namespace"):
 def check_project_name(project_name: str) -> bool:
     """Checks if a project name is valid. Project name should be a valid
     FPP identifier, it should only contain alphanumeric characters and underscores."""
-    if not re.match(r'^[A-Za-z][A-Za-z0-9_]*$', project_name):
+    if not re.match(r"^[A-Za-z][A-Za-z0-9_]*$", project_name):
         raise InvalidProjectName(
             f"Invalid project name: {project_name}. "
             "Project name must start with a letter and only contain alphanumeric characters and underscores."
