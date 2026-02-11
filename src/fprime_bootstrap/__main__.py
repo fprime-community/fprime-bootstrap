@@ -12,7 +12,6 @@ import os
 import logging
 import argparse
 from importlib.metadata import version
-from packaging import version as version_format
 
 from fprime_bootstrap.bootstrap_project import bootstrap_project
 from fprime_bootstrap.clone_project import clone_project
@@ -32,7 +31,7 @@ def main():
     parser.add_argument(
         "--version",
         action="version",
-        version=f"%(prog)s {version_format.parse(version('fprime-bootstrap')).base_version}",
+        version=f"%(prog)s {version('fprime-bootstrap')}",
     )
     subparsers = parser.add_subparsers(title="subcommands", dest="command")
     project_parser = subparsers.add_parser("project", help="Create a new F´ project")
