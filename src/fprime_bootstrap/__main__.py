@@ -31,7 +31,7 @@ def main():
     parser.add_argument(
         "--version",
         action="version",
-        version=f"%(prog)s {version('fprime-bootstrap')}",
+        version=version("fprime-bootstrap"),
     )
     subparsers = parser.add_subparsers(title="subcommands", dest="command")
     project_parser = subparsers.add_parser("project", help="Create a new F´ project")
