@@ -197,6 +197,8 @@ def generate_boilerplate_project(
     # copy files from template into target path
     shutil.copytree(source, project_path, dirs_exist_ok=populate)
 
+    subprocess.run(["chmod", "+w", "-R", "."], cwd=project_path)
+
     # Iterate over all template files and replace {{FPRIME_PROJECT_NAME}} placeholder with project_name
     for file in project_path.rglob("*-template"):
         if file.is_file():
