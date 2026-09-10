@@ -207,7 +207,8 @@ def generate_boilerplate_project(
     # copy files from template into target path
     shutil.copytree(source, project_path, dirs_exist_ok=populate)
     # copytree preserves permissions, so templates installed read-only (e.g. by Nix) need to be made writable
-    make_tree_writable(project_path)
+    if not os.access(source, os.W_OK):
+        make_tree_writable(project_path)
 
     # Iterate over all template files and replace {{FPRIME_PROJECT_NAME}} placeholder with project_name
     for file in project_path.rglob("*-template"):
