@@ -7,8 +7,10 @@ Bootstraps a new project using cookiecuter
 """
 
 import json
+import os
 import shutil
 import logging
+import stat
 import subprocess
 import sys
 import re
@@ -189,6 +191,14 @@ def rename_template_file(file: Path, project_name: str):
         file.rename(file.parent / new_name)
 
 
+def make_tree_writable(root: Path):
+    """Add owner write permission to a directory tree"""
+    for dirpath, _, filenames in os.walk(root):
+        for path in [Path(dirpath)] + [Path(dirpath) / name for name in filenames]:
+            if not path.is_symlink():
+                path.chmod(path.stat().st_mode | stat.S_IWUSR)
+
+
 def generate_boilerplate_project(
     project_path: Path, project_name: str, tag: str, populate: bool = False
 ):
@@ -196,8 +206,9 @@ def generate_boilerplate_project(
     source = Path(__file__).parent / "templates/fprime-project-template"
     # copy files from template into target path
     shutil.copytree(source, project_path, dirs_exist_ok=populate)
-
-    subprocess.run(["chmod", "+w", "-R", "."], cwd=project_path)
+    # copytree preserves permissions, so templates installed read-only (e.g. by Nix) need to be made writable
+    if not os.access(source, os.W_OK):
+        make_tree_writable(project_path)
 
     # Iterate over all template files and replace {{FPRIME_PROJECT_NAME}} placeholder with project_name
     for file in project_path.rglob("*-template"):
