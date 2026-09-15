@@ -71,7 +71,8 @@ markers = [
     "project: marks bootstrap_project test",
     "template: marks no_template_files tests",
     "replace: marks fprime_project_name_replace",
-    "clone: marks bootstrap_clone_test"
+    "clone: marks bootstrap_clone_test",
+    "venv: marks setup_venv_overrides tests"
 ]
 
 ####

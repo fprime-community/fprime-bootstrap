@@ -36,3 +36,7 @@ fprime-bootstrap clone https://github.com/fprime-community/fprime-workshop-led-b
 ```
 
 The options listed above in the `project` command apply, and more can be listed with `fprime-bootstrap clone --help`.
+
+## Dependency overrides
+
+When setting up the project's virtual environment, `fprime-bootstrap` installs the project's `requirements.txt` (falling back to the F´ submodule's `requirements.txt`). If a file named `overrides.txt` exists in the root of the project, it is installed afterwards, allowing a project to override specific dependency versions (e.g. pin a pre-release of `fprime-gds`) without editing `requirements.txt`.

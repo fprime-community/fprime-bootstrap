@@ -14,6 +14,8 @@ import pytest
 import shutil
 from pathlib import Path
 
+from fprime_bootstrap import common
+
 DEFAULT_PROJECT_NAME = "MyProject"
 TMP_FOLDER = "tmp"
 TEMPLATE_FOLDER = "src/fprime_bootstrap/templates/fprime-project-template"
@@ -166,3 +168,39 @@ def test_bootstrap_clone(setup_tmp_folder):
     )
 
     assert result.returncode == 0
+
+
+@pytest.mark.venv
+@pytest.mark.parametrize("with_overrides", [True, False])
+def test_setup_venv_overrides(tmp_path, monkeypatch, with_overrides):
+    """
+    Tests that overrides.txt, when present in the project root, is installed after requirements.txt
+    """
+
+    project_path = tmp_path / DEFAULT_PROJECT_NAME
+    project_path.mkdir()
+    (project_path / "requirements.txt").write_text("fprime-gds\n")
+    if with_overrides:
+        (project_path / "overrides.txt").write_text("fprime-gds==4.0.0a1\n")
+
+    calls = []
+
+    def fake_run(args, *_args, **_kwargs):
+        calls.append([str(arg) for arg in args])
+        if args[1:] == ["-m", "venv", project_path / "fprime-venv"]:
+            (project_path / "fprime-venv" / "bin").mkdir(parents=True)
+            (project_path / "fprime-venv" / "bin" / "pip").touch()
+        return subprocess.CompletedProcess(args, 0)
+
+    monkeypatch.setattr(common.subprocess, "run", fake_run)
+    common.setup_venv(project_path)
+
+    pip = str(project_path / "fprime-venv" / "bin" / "pip")
+    installs = [call for call in calls if call[:2] == [pip, "install"]]
+    expected = [
+        [pip, "install", "--upgrade", "pip"],
+        [pip, "install", "-Ur", str(project_path / "requirements.txt")],
+    ]
+    if with_overrides:
+        expected.append([pip, "install", "-Ur", str(project_path / "overrides.txt")])
+    assert installs == expected

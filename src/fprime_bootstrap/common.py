@@ -63,6 +63,12 @@ def setup_venv(project_path: Path, fprime_subpath: Path = Path("lib/fprime")):
             ]
         )
 
+    # overrides.txt in the project root is installed last to override pinned requirements
+    overrides_path = project_path / "overrides.txt"
+    if overrides_path.exists():
+        LOGGER.info("Installing F´ dependency overrides...")
+        subprocess.run([pip, "install", "-Ur", overrides_path])
+
 
 def print_success_message(project_name: str):
     """Prints a success message"""
